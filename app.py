@@ -7,6 +7,10 @@ TILE_SIZE = 20
 SCREEN_WIDTH = 20
 SCREEN_HEIGHT = 15
 
+# If set to True, each draw call will do one step of the algorithm.
+# If set to False, the algorithm will be solved in one draw call.
+SHOW_STEPS = True
+
 GROUND = 0
 WALL = 1
 
@@ -103,13 +107,16 @@ def update():
                 bfs_init()
         
     elif state == STATE_CALCULATING:
-        if bfs_loop():
+        if SHOW_STEPS:
+            if bfs_loop():
+                solve_path()
+                state = STATE_READY
+        else:
+            while not bfs_loop():
+                pass
+            
+            solve_path()
             state = STATE_READY
-            x, y = target_x, target_y
-            path.appendleft((x, y))
-            while source[y][x] != (player_x, player_y):
-                x, y = source[y][x]
-                path.appendleft((x, y))
     
 def draw():
     """Draws the state of the world"""
@@ -143,6 +150,13 @@ discovered = [x[:] for x in [[False] * SCREEN_WIDTH] * SCREEN_HEIGHT]
 source = [x[:] for x in [[(-1, -1)] * SCREEN_WIDTH] * SCREEN_HEIGHT]
 print source
 path = deque()
+
+def solve_path():
+    x, y = target_x, target_y
+    path.appendleft((x, y))
+    while source[y][x] != (player_x, player_y):
+        x, y = source[y][x]
+        path.appendleft((x, y))
     
 def bfs_loop():
     global discovered
