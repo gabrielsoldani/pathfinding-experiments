@@ -1,0 +1,20 @@
+def busca(inicio, fim):
+    q = [inicio]
+    d = []
+    s = {}
+      
+    while (len(q) > 0):
+        atual = q.pop(0)
+        d.append(atual)
+        
+        if atual == fim:
+            return s
+        
+        for adj in adjacentes(atual):
+            if adj not in d and adj not in q:
+                q.append(adj)
+                s[adj] = atual
+
+    return None
+    
+busca((0, 0), (3, 5))

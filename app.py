@@ -1,7 +1,7 @@
 from collections import deque
 
 # Size of a tile, in pixels
-TILE_SIZE = 20
+TILE_SIZE = 32
 
 # Screen dimensions, in tiles
 SCREEN_WIDTH = 20
@@ -13,24 +13,8 @@ SHOW_STEPS = True
 
 GROUND = 0
 WALL = 1
-
-world = [
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND,   WALL, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND,   WALL, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND,   WALL, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND,   WALL, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND],
-        [GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND, GROUND]
-        ]
+        
+world = [x[:] for x in [[GROUND] * SCREEN_WIDTH] * SCREEN_HEIGHT]
       
 player_x = -1
 player_y = -1
@@ -92,19 +76,27 @@ def update():
             mouse_x = pixels_to_tiles(pmouseX)
             mouse_y = pixels_to_tiles(pmouseY)
             
-            if in_bounds(mouse_x, mouse_y) and can_walk(mouse_x, mouse_y):
-                player_x, player_y = mouse_x, mouse_y
-                state = STATE_SELECTING_TARGET
+            if in_bounds(mouse_x, mouse_y):
             
+                if mouseButton == RIGHT:
+                    world[mouse_y][mouse_x] = WALL if world[mouse_y][mouse_x] == GROUND else GROUND
+                elif can_walk(mouse_x, mouse_y):
+                    player_x, player_y = mouse_x, mouse_y
+                    state = STATE_SELECTING_TARGET
+        
     elif state == STATE_SELECTING_TARGET:
         if clicked:
             mouse_x = pixels_to_tiles(pmouseX)
             mouse_y = pixels_to_tiles(pmouseY)
             
-            if in_bounds(mouse_x, mouse_y) and can_walk(mouse_x, mouse_y):
-                target_x, target_y = mouse_x, mouse_y
-                state = STATE_CALCULATING
-                bfs_init()
+            if in_bounds(mouse_x, mouse_y):
+
+                if mouseButton == RIGHT:
+                    world[mouse_y][mouse_x] = WALL if world[mouse_y][mouse_x] == GROUND else GROUND
+                elif can_walk(mouse_x, mouse_y):
+                    target_x, target_y = mouse_x, mouse_y
+                    state = STATE_CALCULATING
+                    bfs_init()
         
     elif state == STATE_CALCULATING:
         if SHOW_STEPS:
@@ -127,28 +119,27 @@ def draw():
     for y in range(SCREEN_HEIGHT):
         for x in range(SCREEN_WIDTH):
             if len(frontier) > 0 and (x, y) == frontier[0]:
-                fill(0, 0, 255)
+                fill(0xAA, 0x66, 0xCC)
             elif (x, y) == (player_x, player_y):
-                fill(0, 255, 255)
+                fill(0x33, 0xB5, 0xE5)
             elif (x, y) == (target_x, target_y):
-                fill(255, 0, 0)
+                fill(0xFF, 0x44, 0x00)
             elif (x, y) in path:
-                fill(255)
+                fill(0xFF)
             elif (x, y) in frontier:
-                fill(128)
+                fill(0x80)
             elif discovered[y][x]:
-                fill(64)
+                fill(0x55)
             elif can_walk(x, y):
-                fill(0)
+                fill(0x33)
             else:
-                fill(0, 255, 0)
+                fill(0xFF, 0xBB, 0x33)
             
             rect(tiles_to_pixels(x), tiles_to_pixels(y), tiles_to_pixels(1), tiles_to_pixels(1))
 
 frontier = deque()
 discovered = [x[:] for x in [[False] * SCREEN_WIDTH] * SCREEN_HEIGHT]
 source = [x[:] for x in [[(-1, -1)] * SCREEN_WIDTH] * SCREEN_HEIGHT]
-print source
 path = deque()
 
 def solve_path():
