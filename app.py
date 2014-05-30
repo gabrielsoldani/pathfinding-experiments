@@ -41,26 +41,26 @@ def can_walk(p):
     x, y = p
     return world[x][y] == GROUND
 
-def sum_tiles(a, b):
-    """Returns the sum of two tiles a and b."""
+def sum_points(a, b):
+    """Returns the sum of two points a and b."""
     return a[0] + b[0], a[1] + b[1]
 
 def adjacents(p):
     """Returns the tiles the player in tile p can reach in one step"""
     result = []
     for adj in ((0, -1), (0, 1), (-1, 0), (1, 0)):
-        q = sum_tiles(p, adj)
+        q = sum_points(p, adj)
         if in_bounds(q) and can_walk(q):
             result.append(q)
     return result
 
-def tiles_to_pixels(tiles):
-    """Converts tiles to pixels"""
-    return tiles * TILE_SIZE
+def tiles_to_pixels(p):
+    """Converts a point or rectangle in tiles to pixels"""
+    return tuple(x * TILE_SIZE for x in p)
 
-def pixels_to_tiles(pixels):
-    """Converts pixels to tiles"""
-    return pixels / TILE_SIZE
+def pixels_to_tiles(p):
+    """Converts a point or rectangle in pixels to tiles"""
+    return tuple(x / TILE_SIZE for x in p)
 
 def toggle_tile(p):
     x, y = p
@@ -71,7 +71,8 @@ def toggle_tile(p):
         world[x][y] = GROUND
 
 def setup():
-    size(SCREEN_WIDTH * TILE_SIZE + 1, SCREEN_HEIGHT * TILE_SIZE + 1)
+    w, h = sum_points(tiles_to_pixels((SCREEN_WIDTH, SCREEN_HEIGHT)), (1, 1))
+    size(w, h)
 
 lastMousePressed = False
 
@@ -102,7 +103,7 @@ def update_selecting_player(mouse, clicked, button):
     if not clicked:
         return
 
-    mouse_tile = tuple(pixels_to_tiles(x) for x in mouse)
+    mouse_tile = pixels_to_tiles(mouse)
 
     if not in_bounds(mouse_tile):
         return
@@ -123,7 +124,7 @@ def update_selecting_target(mouse, clicked, button):
     if not clicked:
         return
 
-    mouse_tile = tuple(pixels_to_tiles(x) for x in mouse)
+    mouse_tile = pixels_to_tiles(mouse)
 
     if not in_bounds(mouse_tile):
         return
@@ -184,7 +185,7 @@ def draw():
 
         fill(c[0], c[1], c[2])
 
-        r = tuple(tiles_to_pixels(x) for x in p + (1, 1))
+        r = tiles_to_pixels(p + (1, 1))
 
         rect(r[0], r[1], r[2], r[3])
 
