@@ -14,7 +14,7 @@ SHOW_STEPS = True
 GROUND = 0
 WALL = 1
 
-world = [x[:] for x in [[GROUND] * SCREEN_WIDTH] * SCREEN_HEIGHT]
+world = [x[:] for x in [[GROUND] * SCREEN_HEIGHT] * SCREEN_WIDTH]
 
 player = (-1, -1)
 target = (-1, -1)
@@ -26,6 +26,11 @@ STATE_READY = 3
 
 state = STATE_SELECTING_PLAYER
 
+def tiles():
+    for x in xrange(SCREEN_WIDTH):
+        for y in xrange(SCREEN_HEIGHT):
+            yield (x, y)
+
 def in_bounds(p):
     """Returns true if the tile p is within the screen bounds"""
     x, y = p
@@ -34,7 +39,7 @@ def in_bounds(p):
 def can_walk(p):
     """Returns true if the player can walk over the tile at p."""
     x, y = p
-    return world[y][x] == GROUND
+    return world[x][y] == GROUND
 
 def sum_tiles(a, b):
     """Returns the sum of two tiles a and b."""
@@ -60,10 +65,10 @@ def pixels_to_tiles(pixels):
 def toggle_tile(p):
     x, y = p
 
-    if world[y][x] == GROUND:
-        world[y][x] = WALL
+    if world[x][y] == GROUND:
+        world[x][y] = WALL
     else:
-        world[y][x] = GROUND
+        world[x][y] = GROUND
 
 def setup():
     size(SCREEN_WIDTH * TILE_SIZE + 1, SCREEN_HEIGHT * TILE_SIZE + 1)
@@ -151,33 +156,37 @@ def update_calculating(mouse, clicked, button):
 def update_ready(mouse, clicked, button):
     pass
 
+def get_color(p):
+    if len(frontier) > 0 and p == frontier[0]:
+        return 0xAA, 0x66, 0xCC
+    elif p == player:
+        return 0x33, 0xB5, 0xE5
+    elif p == target:
+        return 0xFF, 0x44, 0x00
+    elif p in path:
+        return 0xFF, 0xFF, 0xFF
+    elif p in frontier:
+        return 0x80, 0x80, 0x80
+    elif p in discovered:
+        return 0x55, 0x55, 0x55
+    elif can_walk(p):
+        return 0x33, 0x33, 0x33
+    else:
+        return 0xFF, 0xBB, 0x33
+
 def draw():
     """Draws the state of the world"""
     update()
-    background(255)
-    stroke(0)
-    fill(255)
-    for y in range(SCREEN_HEIGHT):
-        for x in range(SCREEN_WIDTH):
-            p = (x, y)
-            if len(frontier) > 0 and p == frontier[0]:
-                fill(0xAA, 0x66, 0xCC)
-            elif p == player:
-                fill(0x33, 0xB5, 0xE5)
-            elif p == target:
-                fill(0xFF, 0x44, 0x00)
-            elif p in path:
-                fill(0xFF)
-            elif p in frontier:
-                fill(0x80)
-            elif p in discovered:
-                fill(0x55)
-            elif can_walk(p):
-                fill(0x33)
-            else:
-                fill(0xFF, 0xBB, 0x33)
+    stroke(0x00, 0x00, 0x00)
 
-            rect(tiles_to_pixels(x), tiles_to_pixels(y), tiles_to_pixels(1), tiles_to_pixels(1))
+    for p in tiles():
+        c = get_color(p)
+
+        fill(c[0], c[1], c[2])
+
+        r = tuple(tiles_to_pixels(x) for x in p + (1, 1))
+
+        rect(r[0], r[1], r[2], r[3])
 
 frontier = deque()
 discovered = set()
